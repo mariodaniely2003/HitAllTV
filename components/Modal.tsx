@@ -1,18 +1,40 @@
-import { PlusIcon, ThumbUpIcon, VolumeOffIcon, VolumeUpIcon, XIcon } from '@heroicons/react/solid'
-import MuiModal from '@mui/material/Modal'
+
 import { useEffect, useState } from 'react'
-import { FaPlay } from 'react-icons/fa'
-import ReactPlayer from 'react-player/lazy'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { useRecoilState } from 'recoil'
 import { modalState, movieState } from '../atoms/modalAtom'
-import { Genre, Movie, Element } from '../typings'
+import ReactPlayer from 'react-player/lazy'
+import { FaPlay } from 'react-icons/fa'
+import {
+  CheckIcon,
+  PlusIcon,
+  ThumbUpIcon,
+  VolumeOffIcon,
+  VolumeUpIcon,
+  XIcon,
+} from '@heroicons/react/outline'
+import { Element, Genre, Movie } from '../typings'
+import MuiModal from '@mui/material/Modal'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  DocumentData,
+  onSnapshot,
+  setDoc,
+} from 'firebase/firestore'
+import { db } from '../firebase'
+import useAuth from '../hooks/useAuth'
+import toast, { Toaster } from 'react-hot-toast'
 
 function Modal() {
-  const [showModal, setShowModal] = useRecoilState(modalState)
-  const [muted, setMuted] = useState(false)
-  const [genres, setGenres] = useState<Genre[]>([])
   const [movie, setMovie] = useRecoilState(movieState)
   const [trailer, setTrailer] = useState('')
+  const [showModal, setShowModal] = useRecoilState(modalState)
+  const [muted, setMuted] = useState(true)
+  const [genres, setGenres] = useState<Genre[]>([])
+  const [addedToList, setAddedToList] = useState(false)
+  const { user } = useAuth()
+  const [movies, setMovies] = useState<DocumentData[] | Movie[]>([])
 
   useEffect(() => {
     if (!movie) return
@@ -44,7 +66,55 @@ function Modal() {
   const handleClose = () => {
     setShowModal(false)
   }
+  // Find all the movies in the user's list
+  useEffect(() => {
+    if (user) {
+      return onSnapshot(
+        collection(db, 'customers', user.uid, 'myList'),
+        (snapshot) => setMovies(snapshot.docs)
+      )
+    }
+  }, [db, movie?.id])
 
+  // Check if the movie is already in the user's list
+  useEffect(
+    () =>
+      setAddedToList(
+        movies.findIndex((result) => result.data().id === movie?.id) !== -1
+      ),
+    [movies]
+  )
+
+  const handleList = async () => {
+    if (addedToList) {
+      await deleteDoc(
+        doc(db, 'customers', user!.uid, 'myList', movie?.id.toString()!)
+      )
+
+      toast(
+        `${movie?.title || movie?.original_name} has been removed from My List`,
+        {
+          duration: 8000
+        }
+      )
+    } else {
+      await setDoc(
+        doc(db, 'customers', user!.uid, 'myList', movie?.id.toString()!),
+        {
+          ...movie,
+        }
+      )
+
+      toast(
+        `${movie?.title || movie?.original_name} has been added to My List.`,
+        {
+          duration: 8000
+        }
+      )
+    }
+  }
+
+  console.log(addedToList)
   return (
     <MuiModal
       open={showModal}
@@ -81,8 +151,12 @@ function Modal() {
                 <FaPlay className="h-7 w-7 text-black" />
                 Play
               </button>
-              <button className="modalButton">
-                <PlusIcon className="h-7 w-7" />
+              <button className="modalButton" onClick={handleList}>
+                {addedToList ? (
+                  <CheckIcon className="h-7 w-7" />
+                ) : (
+                  <PlusIcon className="h-7 w-7" />
+                )}
               </button>
               <button className="modalButton">
                 <ThumbUpIcon className="h-7 w-7" />

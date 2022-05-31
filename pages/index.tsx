@@ -1,13 +1,14 @@
 import { getProducts, Product } from '@stripe/firestore-stripe-payments'
 import Head from 'next/head'
 import { useRecoilValue } from 'recoil'
-import { modalState } from '../atoms/modalAtom'
+import { modalState, movieState } from '../atoms/modalAtom'
 import Banner from '../components/Banner'
 import Header from '../components/Header'
 import Modal from '../components/Modal'
 import Plans from '../components/Plans'
 import Row from '../components/Row'
 import useAuth from '../hooks/useAuth'
+import useList from '../hooks/useList'
 import useSubscription from '../hooks/useSubscription'
 import payments from '../lib/stripe'
 import { Movie } from '../typings'
@@ -39,6 +40,8 @@ const Home = ({
   const { user, loading } = useAuth()
   const showModal = useRecoilValue(modalState)
   const subscription = useSubscription(user)
+  const list = useList(user?.uid)
+  const movie = useRecoilValue(movieState)
 
   if (loading || subscription === null) return null
   if (!subscription) return <Plans products={products}/>
@@ -46,13 +49,14 @@ const Home = ({
   return (
     <div className="relative h-screen bg-gradient-to-b lg:h-[140vh]">
       <Head>
-        <title>Home - Hit TV</title>
+        <title>{movie?.title || movie?.original_name || 'Home'} - Hit TV</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Header />
       <main className="relative pl-4 pb-24 lg:space-y-24 lg:pl-16">
         <Banner netflixOriginals={netflixOriginals} />
         <section className="md:space-y-20">
+        {list.length > 0 && <Row title="My List" movies={list} />}
           <Row title="Os mais populares" movies={trendingNow} />
           <Row title="Melhores Classificados" movies={topRated} />
           <Row title="Muita Ação" movies={actionMovies} />

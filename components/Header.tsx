@@ -42,7 +42,7 @@ function Header() {
           <p className="hidden lg:inline">Kids</p>
           <BellIcon className="h-6 w-6"/>
           <Link href="/account">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png"
+            <img src="https://rb.gy/g1pwyx"
                 alt=""
                 className="cursor-pointer rounded" 
                 width={30} />
