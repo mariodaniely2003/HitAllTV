@@ -2,6 +2,11 @@ export interface Genre {
     id: number
     name: string
   }
+
+  export interface Movie_Url {
+    id: number
+    url: string
+  }
   
   export interface Movie {
     title: string

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { useRecoilState } from 'recoil'
 import { modalState, movieState } from '../atoms/modalAtom'
@@ -25,6 +24,7 @@ import {
 import { db } from '../firebase'
 import useAuth from '../hooks/useAuth'
 import toast, { Toaster } from 'react-hot-toast'
+import Link from 'next/link'
 
 function Modal() {
   const [movie, setMovie] = useRecoilState(movieState)
@@ -35,6 +35,7 @@ function Modal() {
   const [addedToList, setAddedToList] = useState(false)
   const { user } = useAuth()
   const [movies, setMovies] = useState<DocumentData[] | Movie[]>([])
+  const [data, setData] = useState({ id: movie?.id });
 
   useEffect(() => {
     if (!movie) return
@@ -59,7 +60,7 @@ function Modal() {
         setGenres(data.genres)
       }
     }
-
+    console.log(movie.id)
     fetchMovie()
   }, [movie])
 
@@ -94,7 +95,7 @@ function Modal() {
       toast(
         `${movie?.title || movie?.original_name} has been removed from My List`,
         {
-          duration: 8000
+          duration: 8000,
         }
       )
     } else {
@@ -108,7 +109,7 @@ function Modal() {
       toast(
         `${movie?.title || movie?.original_name} has been added to My List.`,
         {
-          duration: 8000
+          duration: 8000,
         }
       )
     }
@@ -144,13 +145,20 @@ function Modal() {
           px-10"
           >
             <div className="flex space-x-2">
-              <button
-                className="flex items-center gap-x-2 rounded bg-white px-8 text-xl font-bold 
-              text-black transition hover:bg-[#e6e6e6]"
+              <Link
+                href={{
+                  pathname: '/viewer',
+                  query: data
+                }}
               >
-                <FaPlay className="h-7 w-7 text-black" />
-                Play
-              </button>
+                <button
+                  className="flex items-center gap-x-2 rounded bg-white px-8 text-xl font-bold 
+              text-black transition hover:bg-[#e6e6e6]"
+                >
+                  <FaPlay className="h-7 w-7 text-black" />
+                  Play
+                </button>
+              </Link>
               <button className="modalButton" onClick={handleList}>
                 {addedToList ? (
                   <CheckIcon className="h-7 w-7" />
